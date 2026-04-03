@@ -2,7 +2,7 @@ import consola from "consola"
 
 import type { State } from "./state"
 
-import { HTTPError } from "./error"
+import { createRateLimitError } from "./error"
 import { sleep } from "./utils"
 
 export async function checkRateLimit(state: State) {
@@ -28,9 +28,8 @@ export async function checkRateLimit(state: State) {
     consola.warn(
       `Rate limit exceeded. Need to wait ${waitTimeSeconds} more seconds.`,
     )
-    throw new HTTPError(
-      "Rate limit exceeded",
-      Response.json({ message: "Rate limit exceeded" }, { status: 429 }),
+    throw createRateLimitError(
+      `Rate limit exceeded. Please wait ${waitTimeSeconds} seconds before making another request.`,
     )
   }
 
