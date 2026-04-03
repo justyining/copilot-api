@@ -5,7 +5,7 @@ import { state } from "../src/lib/state"
 import { completionRoutes } from "../src/routes/chat-completions/route"
 
 const fetchMock = mock(
-  (_url: string, opts: { body?: string; headers: Record<string, string> }) => {
+  (url: string, opts: { body?: string; headers: Record<string, string> }) => {
     return {
       ok: true,
       status: 200,
@@ -17,6 +17,7 @@ const fetchMock = mock(
         model: "gpt-test",
         choices: [],
       }),
+      url,
       requestBody: opts.body,
       headers: opts.headers,
     }
@@ -24,7 +25,16 @@ const fetchMock = mock(
 )
 
 const originalFetch = globalThis.fetch
-const originalState = structuredClone(state)
+const originalState = {
+  accountType: state.accountType,
+  copilotToken: state.copilotToken,
+  vsCodeVersion: state.vsCodeVersion,
+  manualApprove: state.manualApprove,
+  rateLimitSeconds: state.rateLimitSeconds,
+  rateLimitWait: state.rateLimitWait,
+  lastRequestTimestamp: state.lastRequestTimestamp,
+  models: state.models,
+}
 
 const app = new Hono().route("/v1/chat/completions", completionRoutes)
 
@@ -65,7 +75,14 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  Object.assign(state, structuredClone(originalState))
+  state.accountType = originalState.accountType
+  state.copilotToken = originalState.copilotToken
+  state.vsCodeVersion = originalState.vsCodeVersion
+  state.manualApprove = originalState.manualApprove
+  state.rateLimitSeconds = originalState.rateLimitSeconds
+  state.rateLimitWait = originalState.rateLimitWait
+  state.lastRequestTimestamp = originalState.lastRequestTimestamp
+  state.models = originalState.models
   globalThis.fetch = originalFetch
 })
 
@@ -88,6 +105,7 @@ test("fills max_tokens from model limits when omitted", async () => {
     string,
     { body?: string },
   ]
+  expect(fetchMock.mock.calls[0]?.[0]).toContain("/chat/completions")
   expect(JSON.parse(requestOptions.body ?? "{}")).toMatchObject({
     model: "gpt-test",
     max_tokens: 4096,
@@ -114,6 +132,7 @@ test("preserves explicit max_tokens when provided", async () => {
     string,
     { body?: string },
   ]
+  expect(fetchMock.mock.calls[0]?.[0]).toContain("/chat/completions")
   expect(JSON.parse(requestOptions.body ?? "{}")).toMatchObject({
     model: "gpt-test",
     max_tokens: 256,
