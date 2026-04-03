@@ -5,7 +5,10 @@ import { state } from "../src/lib/state"
 import { completionRoutes } from "../src/routes/chat-completions/route"
 
 const fetchMock = mock(
-  (url: string, opts: { body?: string; headers: Record<string, string> }) => {
+  (
+    url: string,
+    requestOptions: { body?: string; headers: Record<string, string> },
+  ) => {
     return {
       ok: true,
       status: 200,
@@ -18,8 +21,8 @@ const fetchMock = mock(
         choices: [],
       }),
       url,
-      requestBody: opts.body,
-      headers: opts.headers,
+      requestBody: requestOptions.body,
+      headers: requestOptions.headers,
     }
   },
 )

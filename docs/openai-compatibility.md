@@ -71,7 +71,7 @@ curl -X POST http://localhost:4141/v1/chat/completions \
 #### `max_tokens` 当前处理
 
 - `max_tokens` 在 OpenAI 兼容接口中是**可选**参数。
-- 如果请求里没有传 `max_tokens`（或传入 `null`），服务会尝试从当前模型信息中读取 `capabilities.limits.max_output_tokens` 并自动补上。
+- 如果请求里没有传 `max_tokens`（或传入 `null`），服务会尝试从当前模型信息中读取 `capabilities.limits.max_output_tokens`，并自动补上。
 - 如果模型信息暂时不可用，则请求会按原样继续转发，不额外强制写入默认值。
 - 如果显式传入 `max_tokens`，则必须是正整数，并且会原样透传给上游。
 
