@@ -22,7 +22,7 @@ healthRoutes.get("/", (c) => {
  * Returns 503 Service Unavailable if not ready
  */
 healthRoutes.get("/ready", (c) => {
-  const isReady = !!(state.githubToken && state.copilotToken)
+  const isReady = Boolean(state.githubToken && state.copilotToken)
 
   if (!isReady) {
     return c.json(
@@ -32,9 +32,9 @@ healthRoutes.get("/ready", (c) => {
         timestamp: new Date().toISOString(),
         ready: false,
         details: {
-          hasGithubToken: !!state.githubToken,
-          hasCopilotToken: !!state.copilotToken,
-          hasModels: !!state.models,
+          hasGithubToken: Boolean(state.githubToken),
+          hasCopilotToken: Boolean(state.copilotToken),
+          hasModels: Boolean(state.models),
         },
       },
       503,
@@ -47,11 +47,11 @@ healthRoutes.get("/ready", (c) => {
     timestamp: new Date().toISOString(),
     ready: true,
     details: {
-      hasGithubToken: !!state.githubToken,
-      hasCopilotToken: !!state.copilotToken,
-      hasModels: !!state.models,
+      hasGithubToken: Boolean(state.githubToken),
+      hasCopilotToken: Boolean(state.copilotToken),
+      hasModels: Boolean(state.models),
       accountType: state.accountType,
-      rateLimitEnabled: !!state.rateLimitSeconds,
+      rateLimitEnabled: Boolean(state.rateLimitSeconds),
     },
   })
 })
