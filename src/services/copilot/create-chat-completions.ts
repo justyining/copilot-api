@@ -2,13 +2,20 @@ import consola from "consola"
 import { events } from "fetch-event-stream"
 
 import { copilotHeaders, copilotBaseUrl } from "~/lib/api-config"
-import { HTTPError } from "~/lib/error"
+import {
+  createAuthenticationError,
+  createServiceUnavailableError,
+  createTimeoutError,
+  HTTPError,
+} from "~/lib/error"
 import { state } from "~/lib/state"
 
 export const createChatCompletions = async (
   payload: ChatCompletionsPayload,
 ) => {
-  if (!state.copilotToken) throw new Error("Copilot token not found")
+  if (!state.copilotToken) {
+    throw createAuthenticationError("Copilot token not found")
+  }
 
   const enableVision = payload.messages.some(
     (x) =>
@@ -28,14 +35,42 @@ export const createChatCompletions = async (
     "X-Initiator": isAgentCall ? "agent" : "user",
   }
 
-  const response = await fetch(`${copilotBaseUrl(state)}/chat/completions`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(payload),
-  })
+  let response: Response
+
+  try {
+    response = await fetch(`${copilotBaseUrl(state)}/chat/completions`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload),
+    })
+  } catch (error) {
+    consola.error("Network error creating chat completions:", error)
+    // Handle network errors
+    if (error instanceof TypeError && error.message.includes("fetch")) {
+      throw createServiceUnavailableError(
+        "Unable to connect to GitHub Copilot service. Please check your network connection.",
+      )
+    }
+    throw createServiceUnavailableError("GitHub Copilot service is temporarily unavailable")
+  }
 
   if (!response.ok) {
-    consola.error("Failed to create chat completions", response)
+    consola.error("Failed to create chat completions", response.status, response.statusText)
+
+    // Handle specific error status codes
+    if (response.status === 401) {
+      throw createAuthenticationError("Invalid or expired GitHub Copilot token")
+    }
+
+    if (response.status === 503) {
+      throw createServiceUnavailableError("GitHub Copilot service is temporarily unavailable")
+    }
+
+    if (response.status === 504) {
+      throw createTimeoutError("Request to GitHub Copilot timed out")
+    }
+
+    // For other errors, throw HTTPError to preserve the original response
     throw new HTTPError("Failed to create chat completions", response)
   }
 

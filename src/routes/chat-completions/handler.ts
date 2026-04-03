@@ -8,6 +8,7 @@ import { checkRateLimit } from "~/lib/rate-limit"
 import { state } from "~/lib/state"
 import { getTokenCount } from "~/lib/tokenizer"
 import { isNullish } from "~/lib/utils"
+import { validateChatCompletionsPayload } from "~/lib/validation"
 import {
   createChatCompletions,
   type ChatCompletionResponse,
@@ -18,6 +19,10 @@ export async function handleCompletion(c: Context) {
   await checkRateLimit(state)
 
   let payload = await c.req.json<ChatCompletionsPayload>()
+
+  // Validate the payload before processing
+  validateChatCompletionsPayload(payload)
+
   consola.debug("Request payload:", JSON.stringify(payload).slice(-400))
 
   // Find the selected model
@@ -56,9 +61,23 @@ export async function handleCompletion(c: Context) {
 
   consola.debug("Streaming response")
   return streamSSE(c, async (stream) => {
-    for await (const chunk of response) {
-      consola.debug("Streaming chunk:", JSON.stringify(chunk))
-      await stream.writeSSE(chunk as SSEMessage)
+    try {
+      for await (const chunk of response) {
+        consola.debug("Streaming chunk:", JSON.stringify(chunk))
+        await stream.writeSSE(chunk as SSEMessage)
+      }
+    } catch (error) {
+      consola.error("Error during streaming:", error)
+      // Send error event to client
+      await stream.writeSSE({
+        event: "error",
+        data: JSON.stringify({
+          error: {
+            type: "internal_error",
+            message: error instanceof Error ? error.message : "An error occurred during streaming",
+          },
+        }),
+      })
     }
   })
 }
