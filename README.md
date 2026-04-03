@@ -1,5 +1,13 @@
 # Copilot API Proxy
 
+> [!NOTE]
+> **Fork Information**
+> This is a fork of [ericc-ch/copilot-api](https://github.com/ericc-ch/copilot-api) maintained by [@justyining](https://github.com/justyining).
+>
+> **Fork Purpose**: This fork aims to explore improvements in code quality, security practices, testing coverage, and documentation while maintaining compatibility with the upstream project. For details on what's different, see [FORK_NOTES.md](./FORK_NOTES.md).
+>
+> **Upstream Sync**: This fork periodically syncs with the upstream repository. To use the official version, visit [ericc-ch/copilot-api](https://github.com/ericc-ch/copilot-api).
+
 > [!WARNING]
 > This is a reverse-engineered proxy of GitHub Copilot API. It is not supported by GitHub, and may break unexpectedly. Use at your own risk.
 
@@ -326,7 +334,7 @@ You can find more options here: [Claude Code settings](https://docs.anthropic.co
 
 You can also read more about IDE integration here: [Add Claude Code to your IDE](https://docs.anthropic.com/en/docs/claude-code/ide-integrations)
 
-## Running from Source
+## Using from Source
 
 The project can be run from source in several ways:
 
@@ -341,6 +349,32 @@ bun run dev
 ```sh
 bun run start
 ```
+
+## Security Best Practices
+
+> [!IMPORTANT]
+> This proxy handles sensitive GitHub and Copilot tokens. Follow these security practices:
+
+### Token Security
+- **Never share tokens**: The `--show-token` flag is for debugging only. Never use it in shared terminals, CI/CD logs, or screenshots.
+- **Secure the `/token` endpoint**: This endpoint exposes your Copilot token. Only use it locally or behind proper authentication.
+- **Environment variables**: When using Docker with `GH_TOKEN`, ensure your container runtime is secure and logs are protected.
+- **Token rotation**: Regularly rotate your GitHub tokens and reauthenticate.
+
+### API Endpoint Security
+- **`/token` endpoint**: Consider this endpoint sensitive. In production deployments, either:
+  - Disable it completely
+  - Restrict access to localhost only
+  - Put it behind authentication/authorization
+- **Manual approval mode**: Use `--manual` flag when you want explicit control over each request.
+- **Rate limiting**: Always use `--rate-limit` to prevent excessive automated usage that could trigger GitHub's abuse detection.
+
+### Deployment Security
+- **Docker**: Run containers with minimal privileges. Consider using non-root users (see [SECURITY.md](./SECURITY.md)).
+- **Network exposure**: Only expose the API to trusted networks. Use reverse proxies with authentication for internet-facing deployments.
+- **Logging**: Disable verbose logging (`--verbose`) in production to prevent token leakage in logs.
+
+For more security information and responsible disclosure, see [SECURITY.md](./SECURITY.md).
 
 ## Usage Tips
 

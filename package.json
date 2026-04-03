@@ -7,11 +7,11 @@
     "github-copilot",
     "openai-compatible"
   ],
-  "homepage": "https://github.com/ericc-ch/copilot-api",
-  "bugs": "https://github.com/ericc-ch/copilot-api/issues",
+  "homepage": "https://github.com/justyining/copilot-api",
+  "bugs": "https://github.com/justyining/copilot-api/issues",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ericc-ch/copilot-api.git"
+    "url": "git+https://github.com/justyining/copilot-api.git"
   },
   "author": "Erick Christian <erickchristian48@gmail.com>",
   "type": "module",
