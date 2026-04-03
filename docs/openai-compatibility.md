@@ -27,7 +27,7 @@ POST /v1/chat/completions
 | `n` | integer | 否 | 生成的完成数量（默认 1） |
 | `stream` | boolean | 否 | 是否流式传输（默认 false） |
 | `stop` | string/array | 否 | 停止序列 |
-| `max_tokens` | integer | 否 | 最大令牌数 |
+| `max_tokens` | integer | 否 | 最大令牌数；未提供时会自动回填为当前模型的 `capabilities.limits.max_output_tokens`（若模型信息可用） |
 | `presence_penalty` | number | 否 | 存在惩罚（-2.0 到 2.0） |
 | `frequency_penalty` | number | 否 | 频率惩罚（-2.0 到 2.0） |
 | `user` | string | 否 | 用户标识符 |
@@ -67,6 +67,13 @@ curl -X POST http://localhost:4141/v1/chat/completions \
     "max_tokens": 1000
   }'
 ```
+
+#### `max_tokens` 当前处理
+
+- `max_tokens` 在 OpenAI 兼容接口中是**可选**参数。
+- 如果请求里没有传 `max_tokens`（或传入 `null`），服务会尝试从当前模型信息中读取 `capabilities.limits.max_output_tokens` 并自动补上。
+- 如果模型信息暂时不可用，则请求会按原样继续转发，不额外强制写入默认值。
+- 如果显式传入 `max_tokens`，则必须是正整数，并且会原样透传给上游。
 
 #### 响应格式
 
@@ -142,18 +149,28 @@ curl http://localhost:4141/v1/models
     {
       "id": "gpt-4",
       "object": "model",
-      "created": 1677649963,
-      "owned_by": "github-copilot"
+      "owned_by": "github-copilot",
+      "capabilities": {
+        "limits": {
+          "max_output_tokens": 8192
+        }
+      }
     },
     {
       "id": "gpt-3.5-turbo",
       "object": "model",
-      "created": 1677649963,
-      "owned_by": "github-copilot"
+      "owned_by": "github-copilot",
+      "capabilities": {
+        "limits": {
+          "max_output_tokens": 4096
+        }
+      }
     }
   ]
 }
 ```
+
+`/v1/chat/completions` 在自动补全 `max_tokens` 时，会使用这里返回的 `capabilities.limits.max_output_tokens`。
 
 ### 3. 嵌入 (POST /v1/embeddings)
 

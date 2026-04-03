@@ -41,7 +41,7 @@ Content-Type: application/json
 |------|------|------|------|
 | `model` | string | 是 | 要使用的模型标识符。支持的模型包括 `gpt-4`, `gpt-4.1`, `gpt-3.5-turbo` 等 |
 | `messages` | array | 是 | 对话消息数组。每条消息必须包含 `role` 和 `content` |
-| `max_tokens` | integer | 是 | 生成响应的最大令牌数 |
+| `max_tokens` | integer | 是 | 生成响应的最大令牌数；`/v1/messages` 中为必填正整数 |
 | `system` | string \| array | 否 | 系统提示。可以是字符串或文本块数组 |
 | `temperature` | number | 否 | 采样温度，范围 0-1。较高的值使输出更随机 |
 | `top_p` | number | 否 | 核采样参数，范围 0-1 |
@@ -170,6 +170,13 @@ curl -X POST http://localhost:4141/v1/messages \
   }'
 ```
 
+#### `max_tokens` 当前处理
+
+- `POST /v1/messages`：`max_tokens` **必填**，必须是正整数。
+- `POST /v1/messages/count_tokens`：`max_tokens` **可选**；如果提供，仍需是正整数。
+- Anthropic 请求在内部转换到 OpenAI 请求时，会将 `max_tokens` 原样映射到上游的 `max_tokens` 字段。
+- 当上游 OpenAI 风格响应因长度截断而返回 `finish_reason: "length"` 时，会在 Anthropic 响应中映射为 `stop_reason: "max_tokens"`。
+
 **带系统提示的请求**:
 
 ```bash
@@ -296,7 +303,7 @@ POST /v1/messages/count_tokens
 
 #### 请求体参数
 
-接受与创建消息端点相同的参数（除了 `stream`）。
+接受与创建消息端点相同的参数（除了 `stream`），但这里的 `max_tokens` 是可选的。
 
 #### 请求示例
 
