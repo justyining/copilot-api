@@ -1,92 +1,121 @@
 # Fork Notes
 
-## Overview
+## About This Fork
 
-This repository is a fork of [ericc-ch/copilot-api](https://github.com/ericc-ch/copilot-api) maintained by [@justyining](https://github.com/justyining).
+This repository is a fork of [ericc-ch/copilot-api](https://github.com/ericc-ch/copilot-api), maintained by [@justyining](https://github.com/justyining).
 
-## Fork Purpose
+## Purpose
 
-This fork is maintained as an **independent experimental version** focused on:
+This fork serves the following purposes:
 
-- **Code Quality Improvements**: Enhanced code organization, error handling, and maintainability
-- **Security Enhancements**: Better token handling, security documentation, and secure defaults
-- **Testing Improvements**: Expanded test coverage for edge cases and failure scenarios
-- **Documentation**: Comprehensive guides, API compatibility matrices, and usage examples
-- **CI/CD Enhancements**: Improved quality gates and release processes
+- **Experimental Features**: Testing and implementing experimental features before potentially contributing them upstream
+- **Personal Customizations**: Maintaining specific configurations and customizations for personal use cases
+- **Continuous Improvement**: Exploring code quality improvements, security enhancements, and documentation updates
+
+## Relationship with Upstream
+
+- **Synchronization**: This fork aims to stay synchronized with the upstream repository
+- **Contributions**: Improvements and bug fixes may be contributed back to the upstream project
+- **Versioning**: This fork follows its own versioning scheme but references the upstream version it's based on
 
 ## Key Differences from Upstream
 
-### Repository Metadata
-- Updated `package.json` to point to this fork's repository
-- Added fork identification in README
-- Clarified relationship with upstream project
+### Current Differences
 
-### Branch Strategy
-- Uses `master` as the default branch (unified across all workflows)
-- Consistent branch references in GitHub Actions workflows
+As of the latest update, this fork includes:
 
-### Documentation Additions
-- **FORK_NOTES.md** (this file): Documents fork-specific information
-- **SECURITY.md**: Security best practices and responsible disclosure
-- Enhanced README with fork information and security warnings
+1. **Enhanced Documentation**
+   - Improved fork identity clarity in README and package.json
+   - Added SECURITY.md with token security best practices
+   - Created comprehensive quickstart guide
+   - Added API compatibility matrix
 
-### Security Improvements
-- Added comprehensive security documentation
-- Token handling best practices
-- Documented API endpoint security considerations
-- Enhanced security warnings for `/token` endpoint
+2. **Security Improvements**
+   - Docker non-root user implementation
+   - Enhanced health check endpoints (/health and /ready)
+   - Improved token handling documentation
 
-### Testing Strategy
-- Documented test expansion roadmap
-- Focus areas include:
-  - Token lifecycle and failure scenarios
-  - Rate limiting behavior
-  - Streaming edge cases
-  - Error handling paths
-  - Multi-tool call scenarios
+3. **Code Quality**
+   - Consistent branch strategy (unified to master)
+   - Enhanced error handling patterns
+   - Improved test coverage
 
-### Code Quality
-- Documented error handling standards
-- Unified error response formats
-- Structured logging approach
+4. **Developer Experience**
+   - Better CI/CD workflow consistency
+   - Clearer contribution guidelines
+   - Enhanced debugging capabilities
 
-## Upstream Synchronization
+### Planned Features
 
-This fork periodically reviews and selectively merges changes from the upstream repository at [ericc-ch/copilot-api](https://github.com/ericc-ch/copilot-api). However, not all upstream changes may be incorporated if they conflict with the fork's goals.
+Features under consideration for future implementation:
 
-## Release Strategy
-
-This fork follows an **independent release strategy**:
-
-- **Versioning**: May diverge from upstream versioning to reflect fork-specific changes
-- **NPM Publishing**: Not intended for npm publication (use upstream package)
-- **Docker Images**: Uses GitHub Container Registry at `ghcr.io/justyining/copilot-api`
-- **Releases**: Tagged releases document fork-specific improvements
+- Enhanced rate limiting strategies
+- Additional API compatibility layers
+- Improved monitoring and observability
+- Extended test coverage for edge cases
 
 ## Using This Fork
 
-### When to Use This Fork
-- You want to experiment with enhanced security features
-- You're interested in the documented improvements and best practices
-- You want to contribute to fork-specific enhancements
+### Installation
 
-### When to Use Upstream
-- You want the official, actively maintained version
-- You prefer stability over experimental features
-- You need the published npm package
+You can use this fork directly via npx:
+
+```bash
+npx copilot-api@latest start
+```
+
+Or install it globally:
+
+```bash
+npm install -g copilot-api
+```
+
+### Switching Between Upstream and Fork
+
+If you want to switch back to the upstream version:
+
+```bash
+npm uninstall -g copilot-api
+npm install -g copilot-api  # This will install from the main npm registry
+```
 
 ## Contributing
 
-Contributions to this fork are welcome! Please note:
+### To This Fork
 
-- This fork accepts contributions aligned with its goals
-- For general features, consider contributing to [upstream](https://github.com/ericc-ch/copilot-api) instead
-- See contribution guidelines in the upstream project
+Issues and pull requests specific to this fork should be opened in this repository:
+- Issues: https://github.com/justyining/copilot-api/issues
+- Pull Requests: https://github.com/justyining/copilot-api/pulls
 
-## Acknowledgments
+### To Upstream
 
-This fork builds on the excellent work by [@ericc-ch](https://github.com/ericc-ch) and the original copilot-api contributors. All core functionality and original implementation credit belongs to the upstream project.
+If you'd like to contribute to the original project, please visit:
+- Upstream Repository: https://github.com/ericc-ch/copilot-api
+- Upstream Issues: https://github.com/ericc-ch/copilot-api/issues
+
+## Changelog
+
+### Fork-Specific Changes
+
+See the commit history for detailed changes specific to this fork.
+
+### Upstream Sync History
+
+This fork is regularly synchronized with upstream changes. Check the merge commits for upstream synchronization points.
+
+## Support
+
+For issues specific to this fork, please open an issue in this repository.
+
+For general questions about the Copilot API proxy functionality, you may also refer to the upstream repository's documentation and community.
 
 ## License
 
-This fork maintains the same license as the upstream project. See [LICENSE](./LICENSE) for details.
+This fork maintains the same license as the upstream project. See [LICENSE](LICENSE) for details.
+
+## Acknowledgments
+
+Special thanks to:
+- [@ericc-ch](https://github.com/ericc-ch) and all contributors to the original copilot-api project
+- The GitHub Copilot team for providing the underlying service
+- All users and contributors who help improve this project
