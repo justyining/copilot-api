@@ -6,6 +6,8 @@ import consola from "consola"
 import { serve, type ServerHandler } from "srvx"
 import invariant from "tiny-invariant"
 
+import type { Model } from "./services/copilot/get-models"
+
 import { ensurePaths } from "./lib/paths"
 import { initProxyFromEnv } from "./lib/proxy"
 import { generateEnvScript } from "./lib/shell"
@@ -60,9 +62,14 @@ export async function runServer(options: RunServerOptions): Promise<void> {
   await setupCopilotToken()
   await cacheModels()
 
+  // Log detailed model configuration
   consola.info(
     `Available models: \n${state.models?.data.map((model) => `- ${model.id}`).join("\n")}`,
   )
+
+  if (options.verbose && state.models?.data) {
+    logDetailedModelConfigurations(state.models.data)
+  }
 
   const serverUrl = `http://localhost:${options.port}`
 
@@ -118,6 +125,52 @@ export async function runServer(options: RunServerOptions): Promise<void> {
     fetch: server.fetch as ServerHandler,
     port: options.port,
   })
+}
+
+function logDetailedModelConfigurations(models: Array<Model>) {
+  consola.info("\nDetailed model configurations:")
+  for (const model of models) {
+    consola.info(`\n[${model.id}]`)
+    consola.info(`  Name: ${model.name}`)
+    consola.info(`  Vendor: ${model.vendor}`)
+    consola.info(`  Version: ${model.version}`)
+    consola.info(`  Preview: ${model.preview}`)
+    consola.info(`  Family: ${model.capabilities.family}`)
+    consola.info(`  Tokenizer: ${model.capabilities.tokenizer}`)
+    consola.info(`  Type: ${model.capabilities.type}`)
+    consola.info("  Limits:")
+    if (model.capabilities.limits.max_context_window_tokens) {
+      consola.info(
+        `    Max context window: ${model.capabilities.limits.max_context_window_tokens} tokens`,
+      )
+    }
+    if (model.capabilities.limits.max_output_tokens) {
+      consola.info(
+        `    Max output: ${model.capabilities.limits.max_output_tokens} tokens`,
+      )
+    }
+    if (model.capabilities.limits.max_prompt_tokens) {
+      consola.info(
+        `    Max prompt: ${model.capabilities.limits.max_prompt_tokens} tokens`,
+      )
+    }
+    if (model.capabilities.limits.max_inputs) {
+      consola.info(`    Max inputs: ${model.capabilities.limits.max_inputs}`)
+    }
+    consola.info("  Supports:")
+    consola.info(
+      `    Tool calls: ${model.capabilities.supports.tool_calls ?? false}`,
+    )
+    consola.info(
+      `    Parallel tool calls: ${model.capabilities.supports.parallel_tool_calls ?? false}`,
+    )
+    if (model.capabilities.supports.dimensions !== undefined) {
+      consola.info(`    Dimensions: ${model.capabilities.supports.dimensions}`)
+    }
+    if (model.policy) {
+      consola.info(`  Policy state: ${model.policy.state}`)
+    }
+  }
 }
 
 export const start = defineCommand({
