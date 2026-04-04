@@ -2,266 +2,260 @@
 
 ## Overview
 
-This project is a reverse-engineered proxy for the GitHub Copilot API. Due to its nature and the sensitive tokens it handles, security considerations are paramount.
+This project acts as a reverse-engineered proxy for the GitHub Copilot API. As such, it handles sensitive authentication tokens and credentials. Please read this document carefully to understand the security implications and best practices.
 
 ## Supported Versions
 
+Security updates are applied to the latest version only. Please ensure you're running the most recent version of copilot-api.
+
 | Version | Supported          |
 | ------- | ------------------ |
-| 0.7.x   | :white_check_mark: |
-| < 0.7   | :x:                |
+| Latest  | :white_check_mark: |
+| < 0.7.x | :x:                |
 
 ## Security Considerations
 
-### This is Unofficial and Reverse-Engineered
+### 1. Token Handling
 
-> [!WARNING]
-> This proxy is **not officially supported by GitHub**. It relies on reverse-engineered API endpoints that may change or break at any time. Use at your own risk.
+#### GitHub Personal Access Tokens
+- **Never commit tokens to version control**
+- **Never share tokens** with untrusted parties
+- Use tokens with the **minimum required permissions**
+- Rotate tokens regularly (at least every 90 days)
+- Revoke tokens immediately if compromised
 
-### Potential Risks
+#### Copilot Tokens
+- Copilot tokens are automatically fetched and refreshed
+- These tokens are stored locally in your user data directory
+- The `--show-token` flag should **only be used for debugging**
+- Never expose Copilot tokens in logs, screenshots, or shared terminals
 
-1. **Account Restrictions**: Excessive or automated usage may trigger GitHub's abuse detection systems, potentially leading to:
-   - Security warnings from GitHub
-   - Temporary suspension of Copilot access
-   - Account restrictions
+### 2. API Endpoint Security
 
-2. **Token Exposure**: This proxy handles sensitive authentication tokens:
-   - GitHub personal access tokens
-   - GitHub Copilot API tokens
-   - Session tokens
+#### `/token` Endpoint
+The `/token` endpoint exposes the current Copilot token being used by the API.
 
-3. **Network Security**: The proxy exposes endpoints that could be exploited if not properly secured.
+**Security Recommendations:**
+- This endpoint should **only be accessible on localhost** in development
+- **Never expose this endpoint to the internet**
+- Consider implementing authentication if you must expose it
+- Use firewall rules to restrict access
+- Monitor access logs for unauthorized usage
 
-## Token Security Best Practices
+**Production Deployment:**
+If you deploy this service in production, consider:
+- Removing or disabling the `/token` endpoint
+- Implementing proper authentication and authorization
+- Using a reverse proxy with authentication (e.g., nginx with basic auth)
+- Rate limiting all endpoints
 
-### Never Share Tokens
+#### `/usage` Endpoint
+While less sensitive, the usage endpoint can still reveal information about your API consumption patterns. Apply similar protections as the `/token` endpoint.
 
-- **`--show-token` flag**: Only use for local debugging. Never use in:
-  - Shared terminals or tmux/screen sessions
-  - CI/CD pipelines with visible logs
-  - Screenshots or screen recordings
-  - Shared development environments
+### 3. Command-Line Flags
 
-### Secure Token Storage
+#### `--show-token`
+- **Only use in debug mode** for troubleshooting
+- **Never use in:**
+  - Shared terminals or screen sharing sessions
+  - CI/CD pipelines with public logs
+  - Recorded terminal sessions
+  - Screenshots or documentation
+- Tokens shown via this flag should be considered exposed and rotated
 
-- Tokens are stored in `~/.local/share/copilot-api/` (or equivalent OS-specific directory)
-- Ensure this directory has proper file permissions (0700)
-- Do not commit token files to version control
-- Rotate tokens regularly
+#### `--github-token`
+- Avoid passing tokens via command-line arguments (visible in process lists)
+- Prefer the interactive authentication flow
+- If you must use this flag, ensure:
+  - Your shell history is disabled or secured
+  - Process listings are not accessible to other users
+  - The environment is properly isolated
 
-### Docker Security
+### 4. Docker Security
 
-When using Docker with environment variables:
+#### Environment Variables
+When running via Docker:
+- **Never** commit Dockerfiles or compose files with hardcoded tokens
+- Use Docker secrets or secure environment variable injection
+- Avoid logging environment variables in entrypoint scripts
+- Be aware that `docker inspect` can reveal environment variables
 
-```bash
-# ❌ BAD: Token visible in process list and logs
-docker run -e GH_TOKEN=ghp_very_secret_token copilot-api
+#### Container Security
+This project's Docker image implements security best practices:
+- **Non-root user**: The container runs as user `copilot` (UID 1001), not root
+- **Minimal base image**: Uses Alpine Linux for reduced attack surface
+- **Multi-stage build**: Separates build and runtime dependencies
+- **Health checks**: Monitors container health
 
-# ✅ BETTER: Use Docker secrets or mounted files
-docker run -v ~/.github-token:/run/secrets/gh_token copilot-api
-```
+**Additional Recommendations:**
+- Run containers with `--read-only` filesystem where possible
+- Use Docker secrets for sensitive data
+- Limit container capabilities with `--cap-drop`
+- Use user namespaces for additional isolation
+- Scan images regularly for vulnerabilities
 
-Additional Docker security measures:
-- Run containers with minimal privileges
-- Use non-root users (see Improvement Point 5 in roadmap)
-- Limit container network access
-- Use read-only filesystems where possible
-- Scan images for vulnerabilities regularly
+### 5. Network Security
 
-## API Endpoint Security
+#### Localhost Only (Default)
+By default, the server binds to `localhost:4141`. This means:
+- Only processes on the same machine can access it
+- This is the **recommended configuration** for personal use
 
-### `/token` Endpoint
+#### Exposing to Network
+If you need to expose the service to your network:
+- Use a reverse proxy (nginx, Caddy, Traefik)
+- Implement TLS/HTTPS
+- Add authentication (OAuth, basic auth, API keys)
+- Use firewall rules to restrict access
+- Enable rate limiting
+- Monitor access logs
 
-**Risk Level: HIGH**
+### 6. Rate Limiting and Abuse Prevention
 
-This endpoint returns the current Copilot API token. In production deployments:
+GitHub actively monitors for abuse of their services:
+- **Excessive automated requests** may trigger abuse detection
+- You may receive warnings from GitHub Security
+- Your Copilot access may be suspended for anomalous activity
 
-1. **Disable the endpoint** by not exposing it publicly
-2. **Restrict to localhost** only:
-   ```bash
-   # Use a reverse proxy to block /token
-   # Example nginx configuration:
-   location /token {
-       deny all;
-   }
-   ```
-3. **Add authentication** if you must expose it:
-   - Use API keys
-   - Implement OAuth
-   - Use mutual TLS
+**Best Practices:**
+- Use `--rate-limit` flag to throttle requests
+- Use `--manual` flag for manual approval during testing
+- Avoid bulk or automated requests
+- Monitor your usage via the `/usage` endpoint
+- Review [GitHub's Acceptable Use Policies](https://docs.github.com/site-policy/acceptable-use-policies/github-acceptable-use-policies)
 
-### `/usage` Endpoint
+### 7. Logging and Monitoring
 
-**Risk Level: MEDIUM**
+#### What Gets Logged
+By default, the application logs:
+- Request paths and methods
+- Authentication flow steps
+- Error messages
+- Usage statistics
 
-While less sensitive than `/token`, this endpoint reveals usage patterns. Consider:
-- Rate limiting access
-- Authentication for production deployments
-- Monitoring for unusual access patterns
+#### Verbose Mode (`--verbose`)
+Verbose mode may log additional information:
+- Request and response headers
+- Token fetch/refresh events (without token values unless `--show-token` is used)
+- Detailed error stack traces
 
-### Chat Completions and Messages Endpoints
+**Security Practices:**
+- Review logs before sharing for support
+- Redact any sensitive information
+- Avoid enabling verbose logging in production
+- Implement log rotation and secure log storage
+- Monitor logs for suspicious activity
 
-**Risk Level: MEDIUM**
+### 8. Data Storage
 
-These endpoints:
-- Process potentially sensitive prompts and responses
-- Can be resource-intensive
-- Should be rate-limited
-- May log request data
+#### Local Data Directory
+The application stores data in:
+- Linux/Mac: `~/.local/share/copilot-api`
+- Windows: `%LOCALAPPDATA%\copilot-api`
+- Docker: `/home/copilot/.local/share/copilot-api`
 
-Recommendations:
-- Use `--rate-limit` flag
-- Enable `--manual` mode for sensitive operations
-- Review logs for sensitive information before sharing
-- Implement request/response filtering if logging
+**Security Recommendations:**
+- Ensure proper file permissions (600 or 700)
+- Exclude this directory from cloud sync services
+- Include this directory in your backup encryption
+- Securely wipe this directory when decommissioning
 
-## Deployment Security
+### 9. Known Risks and Limitations
 
-### Development Environment
+#### This is a Reverse-Engineered Proxy
+- **Not officially supported** by GitHub
+- **May break** without notice if GitHub changes their API
+- **May trigger** GitHub's abuse detection systems
+- **No security guarantees** from GitHub for unofficial usage
 
-For local development:
-```bash
-# Use with manual approval for sensitive work
-copilot-api start --manual --rate-limit 30
+#### Token Exposure Risks
+- Tokens are stored in memory during operation
+- Memory dumps could potentially expose tokens
+- Tokens are transmitted over HTTPS to GitHub servers
+- Local storage uses filesystem permissions for protection
 
-# Avoid verbose logging with sensitive data
-copilot-api start --verbose  # ⚠️ May log tokens if --show-token is used
-```
+#### Third-Party Dependencies
+This project relies on third-party npm packages:
+- Dependencies may have vulnerabilities
+- Regularly update dependencies
+- Review dependency security advisories
+- Use tools like `npm audit` or `bun audit`
 
-### Production Environment
+## Reporting a Vulnerability
 
-**Not Recommended**: This proxy is not designed for production use. If you must deploy it:
-
-1. **Network Security**:
-   - Deploy behind VPN or private network
-   - Use reverse proxy with authentication (nginx, traefik, etc.)
-   - Implement IP allowlisting
-   - Use HTTPS/TLS for all connections
-
-2. **Access Control**:
-   - Implement authentication (OAuth, API keys, mutual TLS)
-   - Use principle of least privilege
-   - Regular access audits
-
-3. **Monitoring**:
-   - Log all access attempts
-   - Monitor for unusual patterns
-   - Set up alerts for rate limit violations
-   - Track token refresh failures
-
-4. **Container Security**:
-   - Use minimal base images
-   - Run as non-root user
-   - Implement security scanning
-   - Keep dependencies updated
-   - Use resource limits
-
-### CI/CD Environments
-
-**Strongly Discouraged**: Using this proxy in CI/CD is risky and may violate GitHub's acceptable use policies.
-
-If you must:
-- Use GitHub token only, not device auth flow
-- Implement strict rate limiting
-- Use dedicated service accounts
-- Monitor for abuse warnings
-- Have fallback mechanisms
-
-## Rate Limiting and Abuse Prevention
-
-### Always Use Rate Limiting
-
-```bash
-# Minimum recommended rate limit
-copilot-api start --rate-limit 30
-
-# With wait mode (better for automated tools)
-copilot-api start --rate-limit 30 --wait
-```
-
-### Manual Approval Mode
-
-For sensitive operations or learning the tool:
-```bash
-copilot-api start --manual
-```
-
-This allows you to review each request before it's sent to GitHub.
-
-### Monitoring Your Usage
-
-Regularly check your usage:
-```bash
-copilot-api check-usage
-```
-
-Or visit the usage dashboard at startup.
-
-## Known Security Limitations
-
-1. **No built-in authentication**: The API endpoints have no authentication by default
-2. **Token endpoint exposure**: The `/token` endpoint is publicly accessible when the server runs
-3. **No request sanitization**: Prompts and responses are passed through without filtering
-4. **Limited audit logging**: No comprehensive audit trail by default
-5. **No rate limiting by default**: Must be explicitly enabled via flags
-6. **Verbose logging risks**: May log sensitive information when `--verbose` is used
-
-## Recommended Use Cases
-
-### ✅ Appropriate Use
-
-- Personal development and learning
-- Local AI-assisted coding with Claude Code or similar tools
-- Experimentation with AI models
-- Educational purposes
-- Temporary testing
-
-### ❌ Inappropriate Use
-
-- Production services
-- High-frequency automated requests
-- Public-facing APIs
-- Shared/multi-tenant environments without proper security
-- Any usage that violates GitHub's Acceptable Use Policies
-- Bulk/batch processing at scale
-
-## Reporting Security Vulnerabilities
-
+### For This Fork
 If you discover a security vulnerability in this fork, please:
 
 1. **Do not** open a public issue
-2. Email the maintainer directly (check GitHub profile for contact)
+2. Email the maintainer: [Create a private security advisory on GitHub]
 3. Include:
    - Description of the vulnerability
    - Steps to reproduce
    - Potential impact
    - Suggested fix (if any)
 
-For vulnerabilities in the upstream project, report to the [upstream repository](https://github.com/ericc-ch/copilot-api).
+### For Upstream Project
+For vulnerabilities in the upstream project, please report to the original repository:
+- https://github.com/ericc-ch/copilot-api
 
-## Security Checklist
+## Security Best Practices Summary
 
-Before deploying or using this proxy:
+### For Personal Use
+- ✅ Use the default localhost binding
+- ✅ Use interactive authentication flow
+- ✅ Enable rate limiting (`--rate-limit`)
+- ✅ Keep the software updated
+- ✅ Protect your local data directory
+- ❌ Don't expose to the internet
+- ❌ Don't use `--show-token` unless debugging
+- ❌ Don't commit tokens to version control
 
-- [ ] Read and understand GitHub's [Acceptable Use Policies](https://docs.github.com/site-policy/acceptable-use-policies/github-acceptable-use-policies)
-- [ ] Read the [GitHub Copilot Terms](https://docs.github.com/site-policy/github-terms/github-terms-for-additional-products-and-features#github-copilot)
-- [ ] Enable rate limiting (`--rate-limit`)
-- [ ] Avoid using `--show-token` except for debugging
-- [ ] Secure the `/token` endpoint if exposing the server
-- [ ] Use HTTPS if accessing over network
-- [ ] Implement authentication for non-local deployments
-- [ ] Review logs before sharing (avoid token leakage)
-- [ ] Monitor your GitHub account for security notices
-- [ ] Keep dependencies updated
-- [ ] Use Docker with proper security hardening if containerizing
+### For Development
+- ✅ Use `--manual` flag for testing
+- ✅ Review logs before sharing
+- ✅ Use environment-specific configurations
+- ✅ Rotate test tokens regularly
+- ❌ Don't use production tokens in development
+- ❌ Don't commit `.env` files with tokens
+- ❌ Don't share terminal sessions with tokens visible
 
-## Related Documentation
+### For Production (Not Recommended)
+If you must deploy to production despite risks:
+- ✅ Use Docker with non-root user
+- ✅ Implement authentication/authorization
+- ✅ Use TLS/HTTPS
+- ✅ Implement rate limiting
+- ✅ Use monitoring and alerting
+- ✅ Regular security audits
+- ✅ Disable `/token` endpoint
+- ❌ Don't expose without proper security measures
+- ❌ Don't use for critical services
+- ❌ Don't rely on this for production workloads
 
-- [GitHub Acceptable Use Policies](https://docs.github.com/site-policy/acceptable-use-policies/github-acceptable-use-policies)
-- [GitHub Copilot Terms](https://docs.github.com/site-policy/github-terms/github-terms-for-additional-products-and-features#github-copilot)
-- [README.md - Security Best Practices](./README.md#security-best-practices)
-- [FORK_NOTES.md](./FORK_NOTES.md)
+## Security Compliance
+
+### Data Privacy
+- This proxy does not collect or transmit user data except to GitHub
+- All requests are proxied directly to GitHub Copilot API
+- No telemetry or analytics are collected by this application
+- Token storage is local only
+
+### Third-Party Services
+This application communicates with:
+- GitHub API (api.github.com) - for authentication
+- GitHub Copilot API - for AI completions
+- No other third-party services
 
 ## Disclaimer
 
-This project is provided "as is" without warranty of any kind. The maintainers are not responsible for any damage, account restrictions, or other consequences resulting from the use of this software. Users are solely responsible for ensuring their use complies with GitHub's terms of service and acceptable use policies.
+This project is a reverse-engineered proxy and is **not affiliated with, endorsed by, or supported by GitHub**. Use at your own risk. The maintainers are not responsible for:
+- Account suspensions or restrictions
+- Token exposure or misuse
+- Violations of GitHub's Terms of Service
+- Any damages resulting from use of this software
+
+By using this software, you acknowledge these risks and agree to use it responsibly and in compliance with GitHub's policies.
+
+## License
+
+See [LICENSE](LICENSE) for the full license text.

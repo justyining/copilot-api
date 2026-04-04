@@ -29,6 +29,10 @@
 
 ---
 
+**📚 New to Copilot API?** Check out the [Quickstart Guide](docs/quickstart.md) for a 5-minute setup walkthrough!
+
+---
+
 **Note:** If you are using [opencode](https://github.com/sst/opencode), you do not need this project. Opencode supports GitHub Copilot provider out of the box.
 
 ---
@@ -189,6 +193,32 @@ The following command line options are available for the `start` command:
 ## API Endpoints
 
 The server exposes several endpoints to interact with the Copilot API. It provides OpenAI-compatible endpoints and now also includes support for Anthropic-compatible endpoints, allowing for greater flexibility with different tools and services.
+
+### API Compatibility Matrix
+
+The following table shows the current compatibility status with OpenAI and Anthropic APIs:
+
+| Feature | OpenAI API | Anthropic API | Notes |
+|---------|-----------|---------------|-------|
+| Chat Completions | ✅ Full Support | ✅ Full Support | Basic conversational AI |
+| Streaming | ✅ Supported | ✅ Supported | Real-time response streaming |
+| Model Listing | ✅ Supported | ✅ Supported | Returns available Copilot models |
+| Embeddings | ✅ Supported | ❌ Not Available | Vector embeddings for text |
+| Tool/Function Calling | ⚠️ Partial | ⚠️ Partial | Basic tool use supported |
+| Vision/Image Input | ⚠️ Partial | ⚠️ Partial | Limited multimodal support |
+| Token Counting | ✅ Supported | ✅ Supported | `/v1/messages/count_tokens` |
+| System Messages | ✅ Supported | ✅ Supported | System prompts supported |
+| Message History | ✅ Supported | ✅ Supported | Multi-turn conversations |
+| Temperature Control | ✅ Supported | ✅ Supported | Creativity parameter |
+| Max Tokens | ✅ Supported | ✅ Supported | Response length control |
+| Stop Sequences | ✅ Supported | ✅ Supported | Custom stop tokens |
+| Top-P Sampling | ✅ Supported | ✅ Supported | Nucleus sampling |
+| Presence/Frequency Penalties | ⚠️ Limited | ⚠️ Limited | May not work as expected |
+
+**Legend:**
+- ✅ Full Support: Feature works as documented
+- ⚠️ Partial/Limited: Feature works with limitations or differences
+- ❌ Not Available: Feature not supported by underlying Copilot API
 
 ### OpenAI Compatible Endpoints
 
@@ -376,6 +406,64 @@ Here is an example `.claude/settings.json` file:
 You can find more options here: [Claude Code settings](https://docs.anthropic.com/en/docs/claude-code/settings#environment-variables)
 
 You can also read more about IDE integration here: [Add Claude Code to your IDE](https://docs.anthropic.com/en/docs/claude-code/ide-integrations)
+
+## Known Limitations and Risks
+
+### Important Disclaimers
+
+This project is a **reverse-engineered proxy** for GitHub Copilot. Please be aware of the following limitations and risks:
+
+#### ⚠️ Not Officially Supported
+- This proxy is **not affiliated with, endorsed by, or supported by GitHub**
+- The underlying Copilot API is not officially documented
+- GitHub may change their API at any time without notice, causing this proxy to break
+- No service-level agreements or guarantees
+
+#### ⚠️ Account and Usage Risks
+- **Excessive automated usage may trigger GitHub's abuse detection systems**
+- You may receive security warnings from GitHub
+- Continued anomalous activity could result in **temporary suspension** of your Copilot access
+- High-frequency automated requests are **not recommended**
+- Review [GitHub's Acceptable Use Policies](https://docs.github.com/site-policy/acceptable-use-policies/github-acceptable-use-policies) and [Copilot Terms](https://docs.github.com/site-policy/github-terms/github-terms-for-additional-products-and-features#github-copilot)
+
+#### ⚠️ Security Considerations
+- This proxy handles sensitive authentication tokens
+- The `/token` endpoint exposes your Copilot token - **restrict access carefully**
+- Never expose this service to the public internet without proper authentication
+- See [SECURITY.md](SECURITY.md) for detailed security guidelines
+
+#### ⚠️ Feature Limitations
+- Some OpenAI/Anthropic API features may not work exactly as documented
+- Vision/multimodal support is limited
+- Tool/function calling has known limitations
+- Some parameters may be ignored or behave differently
+- Refer to the [API Compatibility Matrix](#api-compatibility-matrix) for details
+
+#### ⚠️ Best Use Cases
+This proxy is **suitable** for:
+- Personal development and experimentation
+- Learning and educational purposes
+- Low-frequency interactive usage
+- Integration with tools like Claude Code for personal projects
+
+This proxy is **not recommended** for:
+- Production applications or critical services
+- High-frequency automated requests or batch processing
+- Services exposed to end users
+- Any use case requiring official support or SLAs
+- Commercial applications without proper authorization
+
+### Responsible Usage Guidelines
+
+To minimize risks and use this proxy responsibly:
+
+1. **Respect Rate Limits**: Use `--rate-limit` to throttle requests
+2. **Monitor Your Usage**: Check the `/usage` endpoint regularly
+3. **Start Small**: Test with `--manual` mode before automation
+4. **Stay Updated**: Keep this proxy updated to the latest version
+5. **Read the Policies**: Familiarize yourself with GitHub's terms and policies
+6. **Secure Your Deployment**: Follow the security guidelines in [SECURITY.md](SECURITY.md)
+7. **Have a Backup Plan**: Don't rely solely on this proxy for critical workflows
 
 ## Using from Source
 
