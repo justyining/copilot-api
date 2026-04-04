@@ -41,6 +41,14 @@
 
 A reverse-engineered proxy for the GitHub Copilot API that exposes it as an OpenAI and Anthropic compatible service. This allows you to use GitHub Copilot with any tool that supports the OpenAI Chat Completions API or the Anthropic Messages API, including to power [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview).
 
+## What's Different in This Fork
+
+- Maintained by [@justyining](https://github.com/justyining) and kept in sync with [ericc-ch/copilot-api](https://github.com/ericc-ch/copilot-api), but released separately.
+- Adds Anthropic parity and stricter request validation for both OpenAI- and Anthropic-style payloads, including `/v1/messages` and `/v1/messages/count_tokens`.
+- Provides extra tooling for visibility and integration: `/usage` dashboard, `check-usage` and `debug` commands, and a `--claude-code` helper for Claude Code setup.
+- Hardens runtime defaults with a non-root Docker image, health/ready endpoints, and clearer token-handling guidance (see [SECURITY.md](./SECURITY.md)).
+- Expands documentation with a quickstart, compatibility matrix, and fork notes—see [FORK_NOTES.md](./FORK_NOTES.md) for the detailed delta.
+
 ## Features
 
 - **OpenAI & Anthropic Compatibility**: Exposes GitHub Copilot as an OpenAI-compatible (`/v1/chat/completions`, `/v1/models`, `/v1/embeddings`) and Anthropic-compatible (`/v1/messages`) API.
@@ -514,127 +522,3 @@ For more security information and responsible disclosure, see [SECURITY.md](./SE
   - `--rate-limit <seconds>`: Enforces a minimum time interval between requests. For example, `copilot-api start --rate-limit 30` will ensure there's at least a 30-second gap between requests.
   - `--wait`: Use this with `--rate-limit`. It makes the server wait for the cooldown period to end instead of rejecting the request with an error. This is useful for clients that don't automatically retry on rate limit errors.
 - If you have a GitHub business or enterprise plan account with Copilot, use the `--account-type` flag (e.g., `--account-type business`). See the [official documentation](https://docs.github.com/en/enterprise-cloud@latest/copilot/managing-copilot/managing-github-copilot-in-your-organization/managing-access-to-github-copilot-in-your-organization/managing-github-copilot-access-to-your-organizations-network#configuring-copilot-subscription-based-network-routing-for-your-enterprise-or-organization) for more details.
-
-## Known Limitations and Risks
-
-> [!CAUTION]
-> **Important**: This is a reverse-engineered, unofficial proxy. Please read these limitations carefully before use.
-
-### Fundamental Limitations
-
-#### 1. Not Officially Supported
-- This proxy is **not endorsed or supported by GitHub**
-- Uses reverse-engineered API endpoints that may change or break without notice
-- No guarantees of continued functionality
-- GitHub may modify their API at any time, breaking compatibility
-
-#### 2. Account Risk
-**Risk of GitHub Account Restrictions**:
-- Excessive automated usage may trigger GitHub's abuse detection systems
-- You may receive security warnings from GitHub
-- Continued anomalous activity could result in:
-  - Temporary suspension of Copilot access
-  - Account restrictions or limitations
-  - Service interruptions
-
-**What triggers abuse detection**:
-- High-frequency automated requests
-- Bulk or batch processing
-- Rapid consecutive requests
-- Unusual usage patterns
-
-**How to minimize risk**:
-- Always use `--rate-limit` flag (minimum 30 seconds recommended)
-- Enable `--manual` mode for sensitive operations
-- Avoid automated/scripted bulk usage
-- Monitor your usage regularly with `check-usage` command
-- Review [GitHub's Acceptable Use Policies](https://docs.github.com/site-policy/acceptable-use-policies/github-acceptable-use-policies)
-
-#### 3. Service Reliability
-- May break unexpectedly due to upstream API changes
-- No SLA or uptime guarantees
-- Token refresh may fail without warning
-- Authentication flow may change
-
-### Technical Limitations
-
-#### 4. API Compatibility Gaps
-See the [API Compatibility Matrix](#api-compatibility-matrix) for full details. Notable limitations:
-- No logprobs support
-- Limited JSON response mode
-- Partial vision/multimodal support
-- No fine-tuned models
-- No batch API
-- Tool calling has edge cases
-
-#### 5. Performance Considerations
-- Proxy adds latency compared to direct API access
-- Rate limiting is client-side only
-- No built-in caching
-- Streaming may have additional overhead
-
-#### 6. Security Concerns
-- Token exposure risks (see [SECURITY.md](./SECURITY.md))
-- `/token` endpoint publicly accessible by default
-- No built-in authentication
-- Verbose logging may leak sensitive data
-- See full security guidelines in [SECURITY.md](./SECURITY.md)
-
-### Operational Limitations
-
-#### 7. Not Suitable For
-
-**❌ Do NOT use this proxy for**:
-- Production services or applications
-- High-frequency automated systems
-- Public-facing APIs
-- Multi-tenant environments without proper security
-- Any usage violating GitHub's Acceptable Use Policies
-- Critical or time-sensitive applications
-- Services requiring uptime guarantees
-- Batch processing or bulk operations
-- Any use case that generates high request volumes
-
-**✅ Appropriate use cases**:
-- Personal development and learning
-- Local AI-assisted coding (e.g., Claude Code)
-- Educational purposes
-- Experimentation and testing
-- Individual productivity tools
-- Temporary or one-off usage
-
-#### 8. Support and Maintenance
-- **Fork-specific**: This fork is maintained independently for experimental purposes
-- **Upstream**: Original project by [@ericc-ch](https://github.com/ericc-ch)
-- **Community support only**: No official support channels
-- **Breaking changes**: May occur without notice
-- See [FORK_NOTES.md](./FORK_NOTES.md) for fork-specific information
-
-### Compliance and Legal
-
-#### 9. Terms of Service
-By using this proxy, you must:
-- Comply with [GitHub's Acceptable Use Policies](https://docs.github.com/site-policy/acceptable-use-policies/github-acceptable-use-policies)
-- Follow [GitHub Copilot Terms](https://docs.github.com/site-policy/github-terms/github-terms-for-additional-products-and-features#github-copilot)
-- Use responsibly and ethically
-- Not violate any applicable laws or regulations
-
-#### 10. No Warranty
-This software is provided "AS IS" without warranty of any kind. See [LICENSE](./LICENSE) for full terms.
-
-**Disclaimer**: The maintainers are not responsible for:
-- Any account restrictions or bans
-- Service interruptions or data loss
-- Security incidents or token leaks
-- Any damages resulting from use of this software
-
-### Getting Help
-
-If you encounter issues:
-- Check [QUICKSTART.md](./docs/QUICKSTART.md) for common solutions
-- Review [SECURITY.md](./SECURITY.md) for security-related questions
-- See [DEVELOPMENT.md](./docs/DEVELOPMENT.md) for development guidelines
-- Open an issue on GitHub (fork or upstream as appropriate)
-
-**For GitHub account issues**: Contact GitHub Support directly - this project cannot help with account restrictions.
-
