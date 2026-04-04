@@ -29,7 +29,7 @@ export const readyRoute = new Hono()
 readyRoute.get("/", (c) => {
   const checks = {
     copilotToken: Boolean(state.copilotToken),
-    models: Boolean(state.models) && (state.models?.data.length ?? 0) > 0,
+    models: (state.models?.data.length ?? 0) > 0,
     vsCodeVersion: Boolean(state.vsCodeVersion),
   }
 
