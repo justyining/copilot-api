@@ -39,6 +39,25 @@ export async function handleCompletion(c: Context) {
     JSON.stringify(openAIPayload),
   )
 
+  // Log model information for Anthropic requests
+  const selectedModel = state.models?.data.find(
+    (model) => model.id === openAIPayload.model,
+  )
+  if (selectedModel) {
+    consola.info(`Selected model (Anthropic): ${selectedModel.id}`)
+    consola.info(
+      `  Model info: ${selectedModel.vendor} ${selectedModel.name} (${selectedModel.version})`,
+    )
+    consola.debug(`  Family: ${selectedModel.capabilities.family}`)
+    if (selectedModel.capabilities.limits.max_output_tokens) {
+      consola.debug(
+        `  Max output tokens: ${selectedModel.capabilities.limits.max_output_tokens} tokens`,
+      )
+    }
+  } else {
+    consola.warn(`Model not found: ${openAIPayload.model}`)
+  }
+
   if (state.manualApprove) {
     await awaitApproval()
   }
