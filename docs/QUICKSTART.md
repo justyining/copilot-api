@@ -1,66 +1,107 @@
 # Quickstart Guide
 
-Get up and running with Copilot API in 5 minutes.
+Get up and running with Copilot API proxy in under 5 minutes!
 
 ## Prerequisites
 
-- Node.js or Bun installed
-- GitHub account with active Copilot subscription (individual, business, or enterprise)
+Before you begin, ensure you have:
+- ✅ A GitHub account with an active Copilot subscription (individual, business, or enterprise)
+- ✅ Bun runtime installed (>= 1.2.x) - [Install Bun](https://bun.sh/docs/installation)
+- ✅ OR Node.js and npm installed (>= 18.x)
 
 ## Step 1: Installation
 
-The fastest way to get started is using `npx` (no installation required):
+Choose one of the following installation methods:
+
+### Option A: Using npx (Recommended for Quick Testing)
+
+No installation needed! Just run:
 
 ```bash
 npx copilot-api@latest start
 ```
 
-Alternatively, you can install globally:
+### Option B: Global Installation
 
 ```bash
 npm install -g copilot-api
-# or
-bun install -g copilot-api
+```
+
+Then run:
+
+```bash
+copilot-api start
+```
+
+### Option C: From Source
+
+```bash
+git clone https://github.com/justyining/copilot-api.git
+cd copilot-api
+bun install
+bun run dev
 ```
 
 ## Step 2: Authentication
 
-On first run, you'll be prompted to authenticate with GitHub:
+When you first start the server, you'll be prompted to authenticate with GitHub.
 
-1. The CLI will display a device code and open your browser
-2. Sign in to GitHub and enter the device code
-3. Authorize the application
+### Interactive Authentication (Recommended)
 
-The authentication token is saved locally and will be reused on subsequent runs.
+1. Run the start command:
+   ```bash
+   npx copilot-api@latest start
+   ```
 
-**Alternative**: If you already have a GitHub token, you can provide it directly:
+2. The CLI will display a device code and a URL:
+   ```
+   Please visit: https://github.com/login/device
+   Enter code: XXXX-XXXX
+   ```
+
+3. Open the URL in your browser and enter the code
+
+4. Authorize the application
+
+5. The CLI will automatically detect the authorization and continue
+
+### Non-Interactive Authentication (CI/CD)
+
+For automated environments:
+
+1. First, generate a token interactively:
+   ```bash
+   npx copilot-api@latest auth
+   ```
+
+2. Copy the displayed token
+
+3. Use it in your scripts:
+   ```bash
+   npx copilot-api@latest start --github-token ghp_YOUR_TOKEN_HERE
+   ```
+
+## Step 3: Verify the Server is Running
+
+Once authenticated, you should see:
+
+```
+✔ Authentication successful!
+Server running at http://localhost:4141
+Usage Dashboard: https://ericc-ch.github.io/copilot-api?endpoint=http://localhost:4141/usage
+```
+
+Test that it's working:
 
 ```bash
-npx copilot-api@latest auth           # Generate a token
-npx copilot-api@latest start --github-token YOUR_TOKEN
+curl http://localhost:4141/v1/models
 ```
 
-## Step 3: Verify It's Running
+You should see a JSON response with available models.
 
-Once started, you should see:
+## Step 4: Make Your First Request
 
-```
-✔ Server started
-ℹ Available models:
-  - gpt-4.1
-  - gpt-3.5-turbo
-  ...
-
-╭──────────────────────────────────────────────────────────────────╮
-│ 🌐 Usage Viewer: https://ericc-ch.github.io/copilot-api?endpoint=...│
-╰──────────────────────────────────────────────────────────────────╯
-```
-
-The server is now running on `http://localhost:4141`.
-
-## Step 4: Test with a Request
-
-### Using curl (OpenAI Format)
+### Using curl (OpenAI-compatible)
 
 ```bash
 curl http://localhost:4141/v1/chat/completions \
@@ -69,12 +110,15 @@ curl http://localhost:4141/v1/chat/completions \
   -d '{
     "model": "gpt-4.1",
     "messages": [
-      {"role": "user", "content": "Hello, how are you?"}
+      {
+        "role": "user",
+        "content": "Say hello!"
+      }
     ]
   }'
 ```
 
-### Using curl (Anthropic Format)
+### Using curl (Anthropic-compatible)
 
 ```bash
 curl http://localhost:4141/v1/messages \
@@ -83,10 +127,13 @@ curl http://localhost:4141/v1/messages \
   -H "anthropic-version: 2023-06-01" \
   -d '{
     "model": "gpt-4.1",
-    "max_tokens": 1024,
     "messages": [
-      {"role": "user", "content": "Hello, how are you?"}
-    ]
+      {
+        "role": "user",
+        "content": "Say hello!"
+      }
+    ],
+    "max_tokens": 1024
   }'
 ```
 
@@ -103,7 +150,7 @@ client = OpenAI(
 response = client.chat.completions.create(
     model="gpt-4.1",
     messages=[
-        {"role": "user", "content": "Hello, how are you?"}
+        {"role": "user", "content": "Say hello!"}
     ]
 )
 
@@ -124,31 +171,29 @@ message = client.messages.create(
     model="gpt-4.1",
     max_tokens=1024,
     messages=[
-        {"role": "user", "content": "Hello, how are you?"}
+        {"role": "user", "content": "Say hello!"}
     ]
 )
 
 print(message.content[0].text)
 ```
 
-## Step 5: Use with Your Tools
+## Step 5: Integrate with Claude Code (Optional)
 
-### With Claude Code
+If you want to use this with Claude Code:
 
-The easiest way to use with Claude Code is the `--claude-code` flag:
+1. Start the server with the Claude Code flag:
+   ```bash
+   npx copilot-api@latest start --claude-code
+   ```
 
-```bash
-npx copilot-api@latest start --claude-code
-```
+2. Select your preferred models when prompted
 
-This will:
-1. Prompt you to select models
-2. Generate a command to launch Claude Code
-3. Copy it to your clipboard
+3. A command will be copied to your clipboard
 
-Just paste and run the command in a new terminal!
+4. Open a new terminal and paste the command to launch Claude Code
 
-**Manual Configuration**: Alternatively, create `.claude/settings.json`:
+Alternatively, create a `.claude/settings.json` file in your project:
 
 ```json
 {
@@ -161,116 +206,112 @@ Just paste and run the command in a new terminal!
     "ANTHROPIC_DEFAULT_HAIKU_MODEL": "gpt-4.1",
     "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "1",
     "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
+  },
+  "permissions": {
+    "deny": ["WebSearch"]
   }
 }
 ```
 
-### With Other OpenAI-Compatible Tools
+Then just run `claude-code` in your project directory.
 
-Point any tool that supports OpenAI API to:
-- **Base URL**: `http://localhost:4141/v1`
-- **API Key**: Any value (e.g., `"dummy"`)
-- **Model**: Use one of the models from the server startup output
+## Common Issues and Solutions
 
-## Common Options
+### Issue: "Authentication failed"
 
-### Change Port
+**Solution:**
+- Ensure your GitHub account has an active Copilot subscription
+- Try the auth flow again: `npx copilot-api@latest auth`
+- Check that you're using the correct account type flag if you have business/enterprise Copilot
 
+### Issue: "Port 4141 already in use"
+
+**Solution:**
 ```bash
 npx copilot-api@latest start --port 8080
 ```
 
-### Enable Rate Limiting (Recommended)
+### Issue: "Rate limit exceeded"
 
+**Solution:**
 ```bash
-# Wait 30 seconds between requests
+# Add rate limiting
 npx copilot-api@latest start --rate-limit 30
 
-# Wait instead of erroring when rate limit is hit
+# Or use wait mode to automatically wait instead of erroring
 npx copilot-api@latest start --rate-limit 30 --wait
 ```
 
-### Use Business/Enterprise Account
+### Issue: Requests are too slow
 
-```bash
-npx copilot-api@latest start --account-type business
-# or
-npx copilot-api@latest start --account-type enterprise
-```
+**Solution:**
+- This is expected - the proxy adds overhead and depends on GitHub's API response times
+- Consider using rate limiting to avoid triggering abuse detection
+- Check your network connection
 
-### Enable Verbose Logging
+### Issue: Docker container exits immediately
 
-```bash
-npx copilot-api@latest start --verbose
-```
-
-## Check Your Usage
-
-View your Copilot usage and quotas:
-
-```bash
-# In terminal
-npx copilot-api@latest check-usage
-
-# Or visit the web dashboard (URL shown at startup)
-```
-
-## Troubleshooting
-
-### Authentication Failed
-
-```bash
-# Re-authenticate
-npx copilot-api@latest auth
-
-# Or provide token directly
-npx copilot-api@latest start --github-token YOUR_TOKEN
-```
-
-### Token Expired
-
-The token is automatically refreshed. If you see persistent auth errors:
-
-```bash
-# Re-run authentication
-npx copilot-api@latest auth
-```
-
-### Port Already in Use
-
-```bash
-# Use a different port
-npx copilot-api@latest start --port 8080
-```
-
-### Models Not Loading
-
-```bash
-# Enable verbose logging to see what's happening
-npx copilot-api@latest start --verbose
-```
-
-### Rate Limit Warnings from GitHub
-
-You're making too many requests. Use rate limiting:
-
-```bash
-npx copilot-api@latest start --rate-limit 30 --wait
-```
+**Solution:**
+- Ensure you've provided authentication or mounted the token directory:
+  ```bash
+  docker run -p 4141:4141 \
+    -v $(pwd)/copilot-data:/home/copilot/.local/share/copilot-api \
+    copilot-api
+  ```
+- Or use the GitHub token environment variable:
+  ```bash
+  docker run -p 4141:4141 -e GH_TOKEN=your_token copilot-api
+  ```
 
 ## Next Steps
 
-- Read the [full README](../README.md) for all options and features
-- Check out [SECURITY.md](../SECURITY.md) for security best practices
-- Review the [API Compatibility Matrix](../README.md#api-compatibility-matrix) to understand limitations
-- See [DEVELOPMENT.md](./DEVELOPMENT.md) for contributing and development guidelines
+Now that you're up and running:
 
-## Important Warnings
+1. **Monitor Usage**: Visit the usage dashboard at the URL shown in the console
+2. **Read the Docs**: Check out the main [README.md](../README.md) for all features
+3. **Security**: Review [SECURITY.md](../SECURITY.md) for security best practices
+4. **Explore APIs**: Try the different endpoints (`/v1/models`, `/v1/embeddings`, etc.)
+5. **Rate Limiting**: Learn about `--rate-limit` and `--manual` flags for safer usage
 
-⚠️ **This is a reverse-engineered proxy** - not officially supported by GitHub
+## Useful Commands Reference
 
-⚠️ **Excessive usage may trigger GitHub's abuse detection** - use responsibly and enable rate limiting
+```bash
+# Start with custom port
+npx copilot-api@latest start --port 8080
 
-⚠️ **Keep your tokens secure** - never share them or commit them to version control
+# Start with verbose logging
+npx copilot-api@latest start --verbose
 
-For more details, see [SECURITY.md](../SECURITY.md).
+# Start with rate limiting
+npx copilot-api@latest start --rate-limit 30 --wait
+
+# Start with manual approval for each request
+npx copilot-api@latest start --manual
+
+# Check your Copilot usage
+npx copilot-api@latest check-usage
+
+# Get debug information
+npx copilot-api@latest debug
+
+# Use with business/enterprise account
+npx copilot-api@latest start --account-type business
+npx copilot-api@latest start --account-type enterprise
+```
+
+## Getting Help
+
+- **Documentation**: See the main [README.md](../README.md)
+- **Issues**: Report bugs at https://github.com/justyining/copilot-api/issues
+- **Upstream**: Original project at https://github.com/ericc-ch/copilot-api
+- **Security**: Review [SECURITY.md](../SECURITY.md) for security concerns
+
+## Important Reminders
+
+⚠️ **This is a reverse-engineered proxy** - use responsibly:
+- Not officially supported by GitHub
+- May break without notice
+- Excessive use may trigger abuse detection
+- See [Known Limitations](../README.md#known-limitations-and-risks) for details
+
+Enjoy using Copilot API proxy! 🚀
